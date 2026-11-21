@@ -22,9 +22,9 @@ public class Main {
         aragorn.getInventory().addItem(new Item("Acélsisak", 3.2, 120));
 
         roster.add(aragorn);
-        roster.add(new Mage("Gandalf", 95, 60, 8, 24));
-        roster.add(new Archer("Legolas", 105, 15, 0.35));
-        roster.add(new Rogue("Vax'ildan", 100, 14, 0.30));
+        roster.add(new Mage("Khad'gar", 95, 60, 8, 24));
+        roster.add(new Archer("Alleria", 105, 15, 0.35));
+        roster.add(new Rogue("Valeera", 100, 14, 0.30));
         roster.add(new Paladin("Uther", 140, 40, 13, 10));
 
         System.out.println("=== RPG ARÉNA SZIMULÁTOR ===");
@@ -38,7 +38,7 @@ public class Main {
             System.out.println("4. Egyetlen támadás szimulálása (választható támadó és célpont)");
             System.out.println("5. Teljes párbaj végsőkig (választható 2 szereplő)");
             System.out.println("6. Szereplő gyógyítása (pihenés)");
-            System.out.println("7. Aragorn mentése / betöltése JSON-ből");
+            System.out.println("7. Szereplők mentése / betöltése JSON-ből");
             System.out.println("0. Kilépés");
             System.out.print("Válassz menüpontot: ");
 
