@@ -4,7 +4,7 @@ import hu.rpg.domain.*;
 import hu.rpg.persistence.GameRepository;
 import hu.rpg.service.CombatEngine;
 import hu.rpg.service.InvalidActionException;
-
+import hu.rpg.ui.InventoryMenuHandler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,13 +15,14 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         CombatEngine engine = new CombatEngine();
         GameRepository repository = new GameRepository();
+        InventoryMenuHandler inventoryMenu = new InventoryMenuHandler();
 
         List<Fighter> roster = new ArrayList<>();
-        Warrior aragorn = new Warrior("Aragorn", 130, 16, 4);
-        aragorn.getInventory().addItem(new Item("Gyógyital", 0.5, 50));
-        aragorn.getInventory().addItem(new Item("Acélsisak", 3.2, 120));
+        Warrior varian = new Warrior("Varian", 130, 16, 4);
+        varian.getInventory().addItem(new Item("Gyógyital", 0.5, 50));
+        varian.getInventory().addItem(new Item("Acélsisak", 3.2, 120));
 
-        roster.add(aragorn);
+        roster.add(varian);
         roster.add(new Mage("Khad'gar", 95, 60, 8, 24));
         roster.add(new Archer("Alleria", 105, 15, 0.35));
         roster.add(new Rogue("Valeera", 100, 14, 0.30));
@@ -38,7 +39,8 @@ public class Main {
             System.out.println("4. Egyetlen támadás szimulálása (választható támadó és célpont)");
             System.out.println("5. Teljes párbaj végsőkig (választható 2 szereplő)");
             System.out.println("6. Szereplő gyógyítása (pihenés)");
-            System.out.println("7. Szereplők mentése / betöltése JSON-ből");
+            System.out.println("7. Hátizsák kezelése (listázás/rendezés, tárgy hozzáadása, tárgy elvétele)");
+            System.out.println("8. Szereplő mentése / betöltése JSON-ből");
             System.out.println("0. Kilépés");
             System.out.print("Válassz menüpontot: ");
 
@@ -69,8 +71,9 @@ public class Main {
                         f.heal(40);
                         System.out.println(f.getName() + " gyógyult! Jelenlegi HP: " + f.getHp() + "/" + f.getMaxHp());
                     }
-                    case "7" -> {
-                        repository.saveWarrior(aragorn, "savegame.json");
+                    case "7" -> inventoryMenu.manageInventory(scanner, roster);
+                    case "8" -> {
+                        repository.saveWarrior(varian, "savegame.json");
                         Warrior loaded = repository.loadWarrior("savegame.json");
                         System.out.println("Mentve és visszatöltve: " + loaded);
                     }

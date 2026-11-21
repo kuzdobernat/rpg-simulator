@@ -11,7 +11,9 @@ public abstract class EquipmentDecorator implements Fighter {
         }
         this.wrappedFighter = wrappedFighter;
     }
-
+    public Fighter getWrappedFighter() {
+        return wrappedFighter;
+    }
     @Override
     public String getName() {
         return wrappedFighter.getName();

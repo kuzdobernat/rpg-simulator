@@ -26,7 +26,7 @@ class CombatTest {
     @Test
     void testPaladinHealsOnAttack() throws InvalidActionException {
         Paladin paladin = new Paladin("Uther", 100, 20, 10, 8);
-        paladin.takeDamage(30); // HP -> 70
+        paladin.takeDamage(30);
         Warrior dummy = new Warrior("Bábu", 100, 5, 0);
 
         paladin.attack(dummy);
@@ -56,7 +56,7 @@ class CombatTest {
     }
 
     @Test
-    void testInventorySortingByValue() {
+    void testInventoryAddRemoveAndSorting() {
         Inventory<Item> inventory = new Inventory<>(20.0);
         Item cheap = new Item("Kenyér", 0.5, 5);
         Item expensive = new Item("Rubin", 0.2, 500);
@@ -64,7 +64,14 @@ class CombatTest {
         inventory.addItem(cheap);
         inventory.addItem(expensive);
 
-        List<Item> sorted = inventory.getItemsSortedByValue();
-        assertEquals("Rubin", sorted.get(0).getName());
+        List<Item> sortedByValue = inventory.getItemsSortedByValue();
+        assertEquals("Rubin", sortedByValue.get(0).getName());
+
+        List<Item> sortedByWeight = inventory.getItemsSortedByWeight();
+        assertEquals("Rubin", sortedByWeight.get(0).getName());
+
+        Item removed = inventory.removeItem(0);
+        assertEquals("Kenyér", removed.getName());
+        assertEquals(1, inventory.getItems().size());
     }
 }

@@ -27,8 +27,26 @@ public class Inventory<T extends Item> {
         items.add(item);
     }
 
+    public T removeItem(int index) {
+        if (index < 0 || index >= items.size()) {
+            throw new IllegalArgumentException("Érvénytelen tárgysorszám a hátizsákban!");
+        }
+        return items.remove(index);
+    }
+
+    public boolean removeItem(T item) {
+        if (item == null) {
+            return false;
+        }
+        return items.remove(item);
+    }
+
     public double getCurrentWeight() {
         return items.stream().mapToDouble(Item::getWeight).sum();
+    }
+
+    public double getMaxWeight() {
+        return maxWeight;
     }
 
     public List<T> getItemsSortedByValue() {
