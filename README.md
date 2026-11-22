@@ -1,36 +1,62 @@
-# RPG Harci Szimuláció (Java OOP Projekt)
+# RPG Harci Szimuláció (`rpg-simulator`)
 
-## 1. Projekt összefoglaló (Problem Statement)
-A projekt célja egy körökre osztott, stratégiai RPG harci szimulátor megvalósítása Java nyelven. A játékos többféle karakterosztályból (Harcos, Mágus, Íjász, Orgyilkos, Lovag/Paladin) válogathat, új hősöket hozhat létre, felszerelésekkel erősítheti őket, és szabadon kiválaszthatja, hogy az arénában ki ki ellen harcoljon.
+Java objektumorientált (OOP) konzolos harci szimulátor alkalmazás Maven build rendszerrel és JUnit 5 tesztekkel.
+
+## 1. Problémaállapot (Problem Statement)
+- **Felhasználók:** Játékosok és a harci mechanikát vizsgáló hallgatók/fejlesztők.
+- **Cél:** Különböző kasztú karakterek (`Warrior`, `Mage`, `Archer`, `Rogue`, `Paladin`) létrehozása, felszerelésekkel való bővítése, hátizsákjuk kezelése, valamint tetszőleges szereplők közötti körökre osztott támadások vagy teljes párbajok szimulálása.
+- **Megoldott probléma:** Olyan bővíthető, jól szeparált tartományi és szolgáltatásréteget biztosít, amelyben az új karakterkasztok és felszerelések egységes `Fighter` szerződésen keresztül működnek, a hibás műveleteket egyedi kivétel kezeli, a hátizsák rendezhető, és az alap karakterállapot JSON fájlba menthető/visszatölthető.
 
 ## 2. Előfeltételek (Prerequisites)
-- Java JDK 17 vagy újabb
-- Apache Maven 3.8+
+- **Java JDK:** 17 vagy újabb
+- **Apache Maven:** 3.8+
 
 ## 3. Fordítás, Tesztelés és Futtatás
-A projekt gyökérmappájából futtatható Maven parancsok:
+A projekt gyökérmappájából (`rpg-simulator/`) az alábbi parancsok futtathatók:
 
 ```bash
-# Fordítás és JUnit tesztek futtatása
+# Fordítás és JUnit 5 tesztek futtatása
 mvn clean test
 
-# Alkalmazás indítása
+# Alkalmazás futtatása konzolon
 mvn compile exec:java
 ```
 
-## 4. Választott Design Minta: Decorator
-- **Probléma:** A karaktereket futásidőben szeretnénk különféle fegyverekkel és páncélokkal felruházni anélkül, hogy minden kombinációra külön alosztályt kellene létrehozni.
-- **Résztvevő osztályok:**
-  - `Fighter` (Komponens interfész)
-  - `Character` és leszármazottai: `Warrior`, `Mage`, `Archer`, `Rogue`, `Paladin` (Konkrét komponensek)
-  - `EquipmentDecorator` (Absztrakt dekorátor)
-  - `FlameSwordDecorator`, `MagicShieldDecorator` (Konkrét dekorátorok)
-- **Előny:** A karakterek sebzése és védelme dinamikusan, futásidőben bővíthető és egymásba ágyazható az Open/Closed elv betartásával.
+## 4. Használat (Sample Usage)
+Indítás után az alábbi főmenü érhető el:
+1. **Szereplők listázása** – kiírja a névsort (`roster`), az aktuális HP/Mana értékeket és az élő/halott állapotot.
+2. **Új szereplő létrehozása** – `Warrior`, `Mage`, `Archer`, `Rogue` vagy `Paladin` felvétele a listába.
+3. **Felszerelés adása egy szereplőnek (Decorator)** – futásidőben `FlameSwordDecorator` vagy `MagicShieldDecorator` réteggel ruházza fel a kiválasztott harcost.
+4. **Egyetlen támadás szimulálása** – tetszőleges támadó és célpont kiválasztása egy akcióra.
+5. **Teljes párbaj végsőkig** – két kiválasztott szereplő körökre osztott összecsapása (`simulateDuel`).
+6. **Szereplő gyógyítása (pihenés)** – HP visszatöltése a maximális értékig (`heal`).
+7. **Hátizsák kezelése** – tárgyak listázása érték (`Comparable`) vagy súly (`Comparator`) szerint rendezve, új `Item` hozzáadása súlylimittel, illetve tárgy elvétele (`InventoryMenuHandler`).
+8. **Szereplő mentése / betöltése JSON-ből** – a `Warrior` példány mentése és visszatöltése `savegame.json` fájlba (`GameRepository`).
 
-## 5. Megvalósított OOP Követelmények
-- **Encapsulation:** Privát mezők, validált konstruktorok és kontrollált getter/setter metódusok.
-- **Abstraction:** `Fighter` interfész és `Character` absztrakt ősosztály.
-- **Inheritance & Polymorphism:** 5 különböző karakterkaszt (`Warrior`, `Mage`, `Archer`, `Rogue`, `Paladin`) egyedi támadási, kritikus sebzési, védekezési és öngyógyító mechanikával.
-- **Collections & Generics:** Saját generikus `Inventory<T extends Item>` osztály `Comparable<Item>` és `Comparator` alapú rendezéssel, valamint szereplőlista (`List<Fighter>`).
-- **Exceptions:** Saját `InvalidActionException` a domain szabályok (pl. halott karakter cselekvése, önmaga megtámadása) kikényszerítésére.
-- **Persistence:** JSON alapú mentés és betöltés `try-with-resources` használatával (`GameRepository`).
+## 5. Megvalósított Követelmények és Design Minta
+
+### Design minta: Decorator
+- **Probléma:** A karaktereket futásidőben szeretnénk fegyverekkel (`FlameSwordDecorator`) és védelmi tárgyakkal (`MagicShieldDecorator`) kiegészíteni anélkül, hogy minden lehetséges kombinációhoz külön alosztályt kellene létrehozni.
+- **Résztvevő osztályok:**
+  - `Fighter` (Component interfész)
+  - `Character` és leszármazottai: `Warrior`, `Mage`, `Archer`, `Rogue`, `Paladin` (ConcreteComponent-ek)
+  - `EquipmentDecorator` (absztrakt Decorator, `wrappedFighter` referenciával és `getWrappedFighter()` metódussal)
+  - `FlameSwordDecorator`, `MagicShieldDecorator` (ConcreteDecorator-ok)
+- **Előny:** A sebzés és a sebzéscsökkentés dinamikusan, egymásba ágyazhatóan bővíthető a meglévő `Character` osztályok módosítása nélkül.
+
+### OOP követelmények
+- **Encapsulation:** Privát mezők, konstruktorbeli és metódusszintű validáció, kontrollált lekérdező és állapotmódosító metódusok.
+- **Abstraction, Inheritance & Polymorphism:** `Fighter` interfész és `Character` absztrakt osztály; öt különböző kaszt saját `attack()`, `takeDamage()` vagy `heal()` viselkedéssel.
+- **Collections & Generics:** `List<Fighter>` a névsorhoz és generikus `Inventory<T extends Item>` osztály `Comparable<Item>` (érték szerint) és `Comparator` (súly szerint) rendezéssel.
+- **Exceptions:** Egyedi `InvalidActionException` (`hu.rpg.service`) érvénytelen harci műveletekre (pl. halott támadó, halott/null célpont, önmaga megtámadása).
+- **Persistence:** JSON szerializáció és deszerializáció Gson segítségével, `try-with-resources` blokkal a `GameRepository` osztályban.
+
+## 6. Főbb Tervezési Döntések és Ismert Korlátok
+- **Tervezési döntések:** A harci logika a `CombatEngine` szolgáltatásban, a hátizsák menükezelése az `InventoryMenuHandler` osztályban kapott helyet, a `Fighter` interfész pedig egységesen kezeli mind az alap `Character` példányokat, mind a dekorált harcosokat.
+- **Ismert korlátok:**
+  - A `GameRepository` jelenleg `Warrior` típusú karaktert ment és tölt be (`saveWarrior` / `loadWarrior`), nem a teljes dekorált `Fighter` láncot vagy a teljes `roster` listát.
+  - A `simulateDuel` metódus biztonsági okból legfeljebb 50 körig fut.
+  - Az `Archer` kritikus találata és a `Rogue` kitérése `Math.random()` alapú, így a kimenetük részben véletlenszerű.
+
+## 7. Közreműködők
+- Projektkészítő: *Küzdő Bernát IHB9KK*
