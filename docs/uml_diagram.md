@@ -1,8 +1,3 @@
----
-
-### `docs/uml_diagram.md`
-
-```markdown
 # UML Osztálydiagram
 
 ```mermaid
@@ -146,8 +141,8 @@ classDiagram
     class GameRepository {
         -gson: Gson
         +GameRepository()
-        +saveWarrior(Warrior warrior, String filePath) void
-        +loadWarrior(String filePath) Warrior
+        +saveRoster(List~Fighter~ roster, String filePath) void
+        +loadRoster(String filePath) List~Fighter~
     }
 
     class Main {
@@ -178,4 +173,5 @@ classDiagram
     Fighter ..> InvalidActionException : throws
     InventoryMenuHandler ..> Character : unwraps
     InventoryMenuHandler ..> Inventory : manages
-    GameRepository ..> Warrior : serializes
+    GameRepository ..> Fighter : serializes roster
+```

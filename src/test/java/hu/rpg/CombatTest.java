@@ -1,10 +1,14 @@
 package hu.rpg;
 
 import hu.rpg.domain.*;
+import hu.rpg.persistence.GameRepository;
 import hu.rpg.service.CombatEngine;
 import hu.rpg.service.InvalidActionException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -73,5 +77,32 @@ class CombatTest {
         Item removed = inventory.removeItem(0);
         assertEquals("Kenyér", removed.getName());
         assertEquals(1, inventory.getItems().size());
+    }
+
+    @Test
+    void testSaveAndLoadEntireRoster(@TempDir Path tempDir) throws IOException, InvalidActionException {
+        Warrior warrior = new Warrior("Varian", 130, 16, 4);
+        warrior.getInventory().addItem(new Item("Gyógyital", 0.5, 50));
+        Fighter decoratedWarrior = new FlameSwordDecorator(warrior, 8);
+
+        Mage mage = new Mage("Khad'gar", 95, 60, 8, 24);
+        decoratedWarrior.attack(mage); // sebzés mentés előtt
+
+        List<Fighter> originalRoster = List.of(decoratedWarrior, mage);
+        Path saveFile = tempDir.resolve("roster_save.json");
+
+        GameRepository repo = new GameRepository();
+        repo.saveRoster(originalRoster, saveFile.toString());
+        List<Fighter> loadedRoster = repo.loadRoster(saveFile.toString());
+
+        assertEquals(2, loadedRoster.size());
+        assertInstanceOf(FlameSwordDecorator.class, loadedRoster.get(0));
+        assertEquals("Varian [Tüzes Kard]", loadedRoster.get(0).getName());
+        assertEquals(mage.getHp(), loadedRoster.get(1).getHp());
+
+        EquipmentDecorator loadedDecorator = (EquipmentDecorator) loadedRoster.get(0);
+        Warrior loadedWarrior = (Warrior) loadedDecorator.getWrappedFighter();
+        assertEquals(1, loadedWarrior.getInventory().getItems().size());
+        assertEquals("Gyógyital", loadedWarrior.getInventory().getItems().get(0).getName());
     }
 }

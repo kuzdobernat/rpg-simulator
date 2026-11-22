@@ -5,7 +5,7 @@ Java objektumorientált (OOP) konzolos harci szimulátor alkalmazás Maven build
 ## 1. Problémaállapot (Problem Statement)
 - **Felhasználók:** Játékosok és a harci mechanikát vizsgáló hallgatók/fejlesztők.
 - **Cél:** Különböző kasztú karakterek (`Warrior`, `Mage`, `Archer`, `Rogue`, `Paladin`) létrehozása, felszerelésekkel való bővítése, hátizsákjuk kezelése, valamint tetszőleges szereplők közötti körökre osztott támadások vagy teljes párbajok szimulálása.
-- **Megoldott probléma:** Olyan bővíthető, jól szeparált tartományi és szolgáltatásréteget biztosít, amelyben az új karakterkasztok és felszerelések egységes `Fighter` szerződésen keresztül működnek, a hibás műveleteket egyedi kivétel kezeli, a hátizsák rendezhető, és az alap karakterállapot JSON fájlba menthető/visszatölthető.
+- **Megoldott probléma:** Olyan bővíthető, jól szeparált tartományi és szolgáltatásréteget biztosít, amelyben az új karakterkasztok és felszerelések egységes `Fighter` szerződésen keresztül működnek, a hibás műveleteket egyedi kivétel kezeli, a hátizsák rendezhető, és a teljes névsor állapota (beleértve a felszereléseket, életerőt, manát és hátizsákokat) JSON fájlba menthető és visszatölthető.
 
 ## 2. Előfeltételek (Prerequisites)
 - **Java JDK:** 17 vagy újabb
@@ -30,8 +30,9 @@ Indítás után az alábbi főmenü érhető el:
 4. **Egyetlen támadás szimulálása** – tetszőleges támadó és célpont kiválasztása egy akcióra.
 5. **Teljes párbaj végsőkig** – két kiválasztott szereplő körökre osztott összecsapása (`simulateDuel`).
 6. **Szereplő gyógyítása (pihenés)** – HP visszatöltése a maximális értékig (`heal`).
-7. **Hátizsák kezelése** – tárgyak listázása érték (`Comparable`) vagy súly (`Comparator`) szerint rendezve, új `Item` hozzáadása súlylimittel, illetve tárgy elvétele (`InventoryMenuHandler`).
-8. **Szereplő mentése / betöltése JSON-ből** – a `Warrior` példány mentése és visszatöltése `savegame.json` fájlba (`GameRepository`).
+7. **Hátizsák kezelése** – tárgyak listázása érték (`Comparable`) vagy súly (`Comparator`) szerint rendezve, új `Item` hozzáadása súlylimittel, illetve tárgy elvétele.
+8. **Összes karakter állapotának mentése JSON-be** – a teljes `roster` lista mentése `savegame.json` fájlba (`GameRepository.saveRoster`).
+9. **Összes karakter állapotának betöltése JSON-ből** – a teljes mentett névsor visszatöltése (`GameRepository.loadRoster`).
 
 ## 5. Megvalósított Követelmények és Design Minta
 
@@ -49,14 +50,13 @@ Indítás után az alábbi főmenü érhető el:
 - **Abstraction, Inheritance & Polymorphism:** `Fighter` interfész és `Character` absztrakt osztály; öt különböző kaszt saját `attack()`, `takeDamage()` vagy `heal()` viselkedéssel.
 - **Collections & Generics:** `List<Fighter>` a névsorhoz és generikus `Inventory<T extends Item>` osztály `Comparable<Item>` (érték szerint) és `Comparator` (súly szerint) rendezéssel.
 - **Exceptions:** Egyedi `InvalidActionException` (`hu.rpg.service`) érvénytelen harci műveletekre (pl. halott támadó, halott/null célpont, önmaga megtámadása).
-- **Persistence:** JSON szerializáció és deszerializáció Gson segítségével, `try-with-resources` blokkal a `GameRepository` osztályban.
+- **Persistence:** Polimorf JSON szerializáció és deszerializáció Gson és egyedi `TypeAdapter` segítségével, `try-with-resources` blokkal a `GameRepository` osztályban (`saveRoster` / `loadRoster`).
 
 ## 6. Főbb Tervezési Döntések és Ismert Korlátok
-- **Tervezési döntések:** A harci logika a `CombatEngine` szolgáltatásban, a hátizsák menükezelése az `InventoryMenuHandler` osztályban kapott helyet, a `Fighter` interfész pedig egységesen kezeli mind az alap `Character` példányokat, mind a dekorált harcosokat.
+- **Tervezési döntések:** A harci logika a `CombatEngine` szolgáltatásban, a hátizsák menükezelése az `InventoryMenuHandler` osztályban kapott helyet, a `GameRepository` pedig egyedi polimorf `TypeAdapter`-rel menti mind az alapkasztokat, mind az egymásba ágyazott `EquipmentDecorator` rétegeket.
 - **Ismert korlátok:**
-  - A `GameRepository` jelenleg `Warrior` típusú karaktert ment és tölt be (`saveWarrior` / `loadWarrior`), nem a teljes dekorált `Fighter` láncot vagy a teljes `roster` listát.
   - A `simulateDuel` metódus biztonsági okból legfeljebb 50 körig fut.
   - Az `Archer` kritikus találata és a `Rogue` kitérése `Math.random()` alapú, így a kimenetük részben véletlenszerű.
 
-## 7. Közreműködők
-- Projektkészítő: *Küzdő Bernát IHB9KK*
+## 7. Közreműköködők
+- Projektkészítő: *Add meg a neved és Neptun/azonosítódat*

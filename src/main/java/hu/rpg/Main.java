@@ -4,13 +4,16 @@ import hu.rpg.domain.*;
 import hu.rpg.persistence.GameRepository;
 import hu.rpg.service.CombatEngine;
 import hu.rpg.service.InvalidActionException;
-import hu.rpg.ui.InventoryMenuHandler;
+import hu.rpg.service.InventoryMenuHandler;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
+    private static final String SAVE_FILE = "savegame.json";
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         CombatEngine engine = new CombatEngine();
@@ -40,7 +43,8 @@ public class Main {
             System.out.println("5. Teljes párbaj végsőkig (választható 2 szereplő)");
             System.out.println("6. Szereplő gyógyítása (pihenés)");
             System.out.println("7. Hátizsák kezelése (listázás/rendezés, tárgy hozzáadása, tárgy elvétele)");
-            System.out.println("8. Szereplő mentése / betöltése JSON-ből");
+            System.out.println("8. Összes karakter állapotának mentése JSON-be");
+            System.out.println("9. Összes karakter állapotának betöltése JSON-ből");
             System.out.println("0. Kilépés");
             System.out.print("Válassz menüpontot: ");
 
@@ -73,14 +77,24 @@ public class Main {
                     }
                     case "7" -> inventoryMenu.manageInventory(scanner, roster);
                     case "8" -> {
-                        repository.saveWarrior(varian, "savegame.json");
-                        Warrior loaded = repository.loadWarrior("savegame.json");
-                        System.out.println("Mentve és visszatöltve: " + loaded);
+                        repository.saveRoster(roster, SAVE_FILE);
+                        System.out.println("Sikeresen elmentve " + roster.size() + " szereplő állapota a(z) " + SAVE_FILE + " fájlba!");
+                    }
+                    case "9" -> {
+                        List<Fighter> loadedRoster = repository.loadRoster(SAVE_FILE);
+                        if (loadedRoster.isEmpty()) {
+                            System.out.println("A mentési fájl üres, a jelenlegi lista megmaradt.");
+                        } else {
+                            roster.clear();
+                            roster.addAll(loadedRoster);
+                            System.out.println("Sikeresen betöltve " + roster.size() + " szereplő állapota!");
+                            printRoster(roster);
+                        }
                     }
                     case "0" -> running = false;
                     default -> System.out.println("Érvénytelen menüpont!");
                 }
-            } catch (InvalidActionException | IllegalArgumentException e) {
+            } catch (InvalidActionException | IllegalArgumentException | IllegalStateException e) {
                 System.out.println("[HIBA]: " + e.getMessage());
             } catch (IOException e) {
                 System.out.println("[FÁJL HIBA]: " + e.getMessage());

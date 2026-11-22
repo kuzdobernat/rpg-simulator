@@ -1,4 +1,4 @@
-package hu.rpg.ui;
+package hu.rpg.service;
 
 import hu.rpg.domain.Character;
 import hu.rpg.domain.EquipmentDecorator;
