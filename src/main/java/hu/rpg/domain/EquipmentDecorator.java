@@ -1,56 +1,34 @@
 package hu.rpg.domain;
 
-import hu.rpg.service.InvalidActionException;
+public abstract class EquipmentDecorator {
+    protected final EquipmentDecorator wrappedEquipment;
 
-public abstract class EquipmentDecorator implements Fighter {
-    protected final Fighter wrappedFighter;
-
-    protected EquipmentDecorator(Fighter wrappedFighter) {
-        if (wrappedFighter == null) {
-            throw new IllegalArgumentException("A becsomagolt harcos nem lehet null.");
-        }
-        this.wrappedFighter = wrappedFighter;
-    }
-    public Fighter getWrappedFighter() {
-        return wrappedFighter;
-    }
-    @Override
-    public String getName() {
-        return wrappedFighter.getName();
+    protected EquipmentDecorator() {
+        this.wrappedEquipment = null;
     }
 
-    @Override
-    public int getHp() {
-        return wrappedFighter.getHp();
+    protected EquipmentDecorator(EquipmentDecorator wrappedEquipment) {
+        this.wrappedEquipment = wrappedEquipment;
     }
 
-    @Override
-    public int getMaxHp() {
-        return wrappedFighter.getMaxHp();
+    public EquipmentDecorator getWrappedEquipment() {
+        return wrappedEquipment;
     }
 
-    @Override
-    public boolean isAlive() {
-        return wrappedFighter.isAlive();
+    public int countInstancesOf(Class<? extends EquipmentDecorator> decoratorClass) {
+        int current = decoratorClass.isInstance(this) ? 1 : 0;
+        return current + (wrappedEquipment != null ? wrappedEquipment.countInstancesOf(decoratorClass) : 0);
     }
 
-    @Override
-    public int attack(Fighter target) throws InvalidActionException {
-        return wrappedFighter.attack(target);
+    public String getDescription() {
+        return wrappedEquipment != null ? wrappedEquipment.getDescription() : "";
     }
 
-    @Override
-    public void takeDamage(int damage) {
-        wrappedFighter.takeDamage(damage);
+    public int modifyOutgoingDamage(int baseDamage) {
+        return wrappedEquipment != null ? wrappedEquipment.modifyOutgoingDamage(baseDamage) : baseDamage;
     }
 
-    @Override
-    public void heal(int amount) {
-        wrappedFighter.heal(amount);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s (HP: %d/%d)", getName(), getHp(), getMaxHp());
+    public int modifyIncomingDamage(int incomingDamage) {
+        return wrappedEquipment != null ? wrappedEquipment.modifyIncomingDamage(incomingDamage) : incomingDamage;
     }
 }

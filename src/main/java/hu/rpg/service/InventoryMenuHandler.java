@@ -1,10 +1,10 @@
 package hu.rpg.service;
 
 import hu.rpg.domain.Character;
-import hu.rpg.domain.EquipmentDecorator;
 import hu.rpg.domain.Fighter;
 import hu.rpg.domain.Inventory;
 import hu.rpg.domain.Item;
+import hu.rpg.domain.ItemCategory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +15,8 @@ public class InventoryMenuHandler {
     public void manageInventory(Scanner scanner, List<Fighter> roster) {
         List<Character> characters = new ArrayList<>();
         for (Fighter f : roster) {
-            Character baseChar = unwrapCharacter(f);
-            if (baseChar != null && !characters.contains(baseChar)) {
-                characters.add(baseChar);
+            if (f instanceof Character character) {
+                characters.add(character);
             }
         }
 
@@ -30,9 +29,12 @@ public class InventoryMenuHandler {
         for (int i = 0; i < characters.size(); i++) {
             Character c = characters.get(i);
             Inventory<Item> inv = c.getInventory();
-            System.out.printf(" [%d] %s (%s) - Súly: %.1f/%.1f kg, Tárgyak száma: %d%n",
+            System.out.printf(" [%d] %s (%s) - Súly: %.1f/%.1f kg, Tárgyak száma: %d (Fegyver: %d, Védelem: %d, Érték: %d)%n",
                     i + 1, c.getName(), c.getClass().getSimpleName(),
-                    inv.getCurrentWeight(), inv.getMaxWeight(), inv.getItems().size());
+                    inv.getCurrentWeight(), inv.getMaxWeight(), inv.getItems().size(),
+                    inv.countByCategory(ItemCategory.WEAPON),
+                    inv.countByCategory(ItemCategory.DEFENSE),
+                    inv.countByCategory(ItemCategory.TREASURE));
         }
 
         int charIdx = askIndex(scanner, "Válaszd ki a karakter sorszámát: ", characters.size());
@@ -61,8 +63,17 @@ public class InventoryMenuHandler {
                     double weight = Double.parseDouble(scanner.nextLine().trim().replace(',', '.'));
                     System.out.print("Add meg a tárgy értékét (arany, egész szám): ");
                     int value = Integer.parseInt(scanner.nextLine().trim());
+                    System.out.println("Kategóriák: 1 - Fegyver | 2 - Védelem | 3 - Érték");
+                    System.out.print("Válassz kategóriát: ");
+                    String catChoice = scanner.nextLine().trim();
+                    ItemCategory category = switch (catChoice) {
+                        case "1" -> ItemCategory.WEAPON;
+                        case "2" -> ItemCategory.DEFENSE;
+                        case "3" -> ItemCategory.TREASURE;
+                        default -> throw new IllegalArgumentException("Ismeretlen tárgykategória!");
+                    };
 
-                    Item newItem = new Item(itemName, weight, value);
+                    Item newItem = new Item(itemName, weight, value, category);
                     inventory.addItem(newItem);
                     System.out.println("Hozzáadva: " + newItem);
                 }
@@ -92,14 +103,6 @@ public class InventoryMenuHandler {
         for (int i = 0; i < items.size(); i++) {
             System.out.printf(" [%d] %s%n", i + 1, items.get(i));
         }
-    }
-
-    private Character unwrapCharacter(Fighter fighter) {
-        Fighter current = fighter;
-        while (current instanceof EquipmentDecorator decorator) {
-            current = decorator.getWrappedFighter();
-        }
-        return (current instanceof Character character) ? character : null;
     }
 
     private int askIndex(Scanner scanner, String prompt, int max) {

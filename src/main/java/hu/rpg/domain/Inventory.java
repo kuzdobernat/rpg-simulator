@@ -41,6 +41,19 @@ public class Inventory<T extends Item> {
         return items.remove(item);
     }
 
+    public int countByCategory(ItemCategory category) {
+        if (category == null) {
+            return 0;
+        }
+        int count = 0;
+        for (T item : items) {
+            if (item.getCategory() == category) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public double getCurrentWeight() {
         return items.stream().mapToDouble(Item::getWeight).sum();
     }

@@ -16,15 +16,15 @@ public class Warrior extends Character {
     @Override
     public int attack(Fighter target) throws InvalidActionException {
         validateCanAct(target);
-        int damage = getBaseAttack() + 5;
+        int damage = calculateTotalAttackDamage(getBaseAttack() + 5);
         target.takeDamage(damage);
         return damage;
     }
 
     @Override
     public void takeDamage(int damage) {
-        int reducedDamage = Math.max(1, damage - armor);
-        super.takeDamage(reducedDamage);
+        int reducedByArmor = Math.max(1, damage - armor);
+        super.takeDamage(reducedByArmor);
     }
 
     public int getArmor() {

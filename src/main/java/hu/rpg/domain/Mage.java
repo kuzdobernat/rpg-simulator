@@ -16,15 +16,15 @@ public class Mage extends Character {
     @Override
     public int attack(Fighter target) throws InvalidActionException {
         validateCanAct(target);
+        int rawDamage;
         if (getMana() >= 15) {
             consumeMana(15);
-            int magicDamage = getBaseAttack() + spellPower;
-            target.takeDamage(magicDamage);
-            return magicDamage;
+            rawDamage = getBaseAttack() + spellPower;
         } else {
-            int staffDamage = getBaseAttack();
-            target.takeDamage(staffDamage);
-            return staffDamage;
+            rawDamage = getBaseAttack();
         }
+        int totalDamage = calculateTotalAttackDamage(rawDamage);
+        target.takeDamage(totalDamage);
+        return totalDamage;
     }
 }

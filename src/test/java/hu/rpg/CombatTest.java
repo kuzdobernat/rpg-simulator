@@ -16,15 +16,39 @@ import static org.junit.jupiter.api.Assertions.*;
 class CombatTest {
 
     @Test
-    void testDecoratorIncreasesDamage() throws InvalidActionException {
+    void testEquipmentDecoratorIncreasesDamage() throws InvalidActionException {
         Warrior warrior = new Warrior("Teszt Harcos", 100, 10, 0);
-        Fighter flameWarrior = new FlameSwordDecorator(warrior, 8);
+        warrior.getInventory().addItem(new Item("Kard", 2.0, 100, ItemCategory.WEAPON));
+        warrior.equip(new FlameSwordDecorator(warrior.getEquipment(), 8));
         Mage target = new Mage("Célpont", 100, 30, 5, 10);
 
-        int damage = flameWarrior.attack(target);
+        int damage = warrior.attack(target);
 
         assertEquals(23, damage);
         assertEquals(77, target.getHp());
+    }
+
+    @Test
+    void testStackedEquipmentDecoratorsAndCounting() {
+        Mage mage = new Mage("Mágus", 100, 30, 5, 10);
+        mage.getInventory().addItem(new Item("Varázsbot", 1.5, 120, ItemCategory.WEAPON));
+        mage.getInventory().addItem(new Item("Rúna köpeny", 1.0, 90, ItemCategory.DEFENSE));
+        mage.getInventory().addItem(new Item("Aranykehely", 0.8, 300, ItemCategory.TREASURE));
+
+        assertEquals(1, mage.getInventory().countByCategory(ItemCategory.WEAPON));
+        assertEquals(1, mage.getInventory().countByCategory(ItemCategory.DEFENSE));
+        assertEquals(1, mage.getInventory().countByCategory(ItemCategory.TREASURE));
+
+        mage.equip(new FlameSwordDecorator(8));
+        mage.equip(new MagicShieldDecorator(mage.getEquipment(), 6));
+
+        assertEquals(1, mage.getEquipment().countInstancesOf(FlameSwordDecorator.class));
+        assertEquals(1, mage.getEquipment().countInstancesOf(MagicShieldDecorator.class));
+
+        mage.takeDamage(20);
+        assertEquals(86, mage.getHp());
+        assertTrue(mage.getEquipment().getDescription().contains("Tüzes Kard"));
+        assertTrue(mage.getEquipment().getDescription().contains("Mágikus Pajzs"));
     }
 
     @Test
@@ -62,8 +86,8 @@ class CombatTest {
     @Test
     void testInventoryAddRemoveAndSorting() {
         Inventory<Item> inventory = new Inventory<>(20.0);
-        Item cheap = new Item("Kenyér", 0.5, 5);
-        Item expensive = new Item("Rubin", 0.2, 500);
+        Item cheap = new Item("Kenyér", 0.5, 5, ItemCategory.TREASURE);
+        Item expensive = new Item("Rubin", 0.2, 500, ItemCategory.TREASURE);
 
         inventory.addItem(cheap);
         inventory.addItem(expensive);
@@ -80,15 +104,18 @@ class CombatTest {
     }
 
     @Test
-    void testSaveAndLoadEntireRoster(@TempDir Path tempDir) throws IOException, InvalidActionException {
+    void testSaveAndLoadEntireRosterWithDecorators(@TempDir Path tempDir) throws IOException, InvalidActionException {
         Warrior warrior = new Warrior("Varian", 130, 16, 4);
-        warrior.getInventory().addItem(new Item("Gyógyital", 0.5, 50));
-        Fighter decoratedWarrior = new FlameSwordDecorator(warrior, 8);
+        warrior.getInventory().addItem(new Item("Gyógyital", 0.5, 50, ItemCategory.TREASURE));
+        warrior.getInventory().addItem(new Item("Kard", 2.0, 150, ItemCategory.WEAPON));
+        warrior.getInventory().addItem(new Item("Pajzs", 3.0, 140, ItemCategory.DEFENSE));
+        warrior.equip(new FlameSwordDecorator(8));
+        warrior.equip(new MagicShieldDecorator(warrior.getEquipment(), 3));
 
         Mage mage = new Mage("Khad'gar", 95, 60, 8, 24);
-        decoratedWarrior.attack(mage); // sebzés mentés előtt
+        warrior.attack(mage);
 
-        List<Fighter> originalRoster = List.of(decoratedWarrior, mage);
+        List<Fighter> originalRoster = List.of(warrior, mage);
         Path saveFile = tempDir.resolve("roster_save.json");
 
         GameRepository repo = new GameRepository();
@@ -96,13 +123,11 @@ class CombatTest {
         List<Fighter> loadedRoster = repo.loadRoster(saveFile.toString());
 
         assertEquals(2, loadedRoster.size());
-        assertInstanceOf(FlameSwordDecorator.class, loadedRoster.get(0));
-        assertEquals("Varian [Tüzes Kard]", loadedRoster.get(0).getName());
+        Warrior loadedWarrior = assertInstanceOf(Warrior.class, loadedRoster.get(0));
+        assertInstanceOf(MagicShieldDecorator.class, loadedWarrior.getEquipment());
+        assertInstanceOf(FlameSwordDecorator.class, loadedWarrior.getEquipment().getWrappedEquipment());
         assertEquals(mage.getHp(), loadedRoster.get(1).getHp());
-
-        EquipmentDecorator loadedDecorator = (EquipmentDecorator) loadedRoster.get(0);
-        Warrior loadedWarrior = (Warrior) loadedDecorator.getWrappedFighter();
-        assertEquals(1, loadedWarrior.getInventory().getItems().size());
-        assertEquals("Gyógyital", loadedWarrior.getInventory().getItems().get(0).getName());
+        assertEquals(3, loadedWarrior.getInventory().getItems().size());
+        assertEquals(ItemCategory.WEAPON, loadedWarrior.getInventory().getItems().get(1).getCategory());
     }
 }

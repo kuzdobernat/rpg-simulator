@@ -3,8 +3,12 @@ package hu.rpg.domain;
 public class MagicShieldDecorator extends EquipmentDecorator {
     private final int damageReduction;
 
-    public MagicShieldDecorator(Fighter wrappedFighter, int damageReduction) {
-        super(wrappedFighter);
+    public MagicShieldDecorator(int damageReduction) {
+        this(null, damageReduction);
+    }
+
+    public MagicShieldDecorator(EquipmentDecorator wrappedEquipment, int damageReduction) {
+        super(wrappedEquipment);
         if (damageReduction < 0) {
             throw new IllegalArgumentException("A sebzéscsökkentés nem lehet negatív.");
         }
@@ -12,13 +16,15 @@ public class MagicShieldDecorator extends EquipmentDecorator {
     }
 
     @Override
-    public String getName() {
-        return wrappedFighter.getName() + " [Mágikus Pajzs]";
+    public String getDescription() {
+        String own = "Mágikus védekezés (-" + damageReduction + " bekapott sebzés)";
+        String prev = super.getDescription();
+        return prev.isEmpty() ? own : prev + " + " + own;
     }
 
     @Override
-    public void takeDamage(int damage) {
-        int mitigated = Math.max(0, damage - damageReduction);
-        super.takeDamage(mitigated);
+    public int modifyIncomingDamage(int incomingDamage) {
+        int mitigated = super.modifyIncomingDamage(incomingDamage);
+        return Math.max(0, mitigated - damageReduction);
     }
 }

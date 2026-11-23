@@ -1,6 +1,7 @@
 package hu.rpg;
 
 import hu.rpg.domain.*;
+import hu.rpg.domain.Character;
 import hu.rpg.persistence.GameRepository;
 import hu.rpg.service.CombatEngine;
 import hu.rpg.service.InvalidActionException;
@@ -22,8 +23,9 @@ public class Main {
 
         List<Fighter> roster = new ArrayList<>();
         Warrior varian = new Warrior("Varian", 130, 16, 4);
-        varian.getInventory().addItem(new Item("Gyógyital", 0.5, 50));
-        varian.getInventory().addItem(new Item("Acélsisak", 3.2, 120));
+        varian.getInventory().addItem(new Item("Gyógyital", 0.5, 50, ItemCategory.TREASURE));
+        varian.getInventory().addItem(new Item("Acélsisak", 3.2, 120, ItemCategory.DEFENSE));
+        varian.getInventory().addItem(new Item("Hosszúkard", 2.5, 150, ItemCategory.WEAPON));
 
         roster.add(varian);
         roster.add(new Mage("Khad'gar", 95, 60, 8, 24));
@@ -38,7 +40,7 @@ public class Main {
             System.out.println("\n--- FŐMENÜ ---");
             System.out.println("1. Szereplők listázása");
             System.out.println("2. Új szereplő létrehozása");
-            System.out.println("3. Felszerelés adása egy szereplőnek (Decorator)");
+            System.out.println("3. Új tulajdonság adása egy szereplő felszerelésének (Decorator)");
             System.out.println("4. Egyetlen támadás szimulálása (választható támadó és célpont)");
             System.out.println("5. Teljes párbaj végsőkig (választható 2 szereplő)");
             System.out.println("6. Szereplő gyógyítása (pihenés)");
@@ -142,18 +144,45 @@ public class Main {
 
     private static void equipCharacter(Scanner scanner, List<Fighter> roster) {
         printRoster(roster);
-        int idx = askIndex(scanner, "Melyik szereplő kapjon felszerelést? Sorszám: ", roster.size());
-        System.out.println("1 - Tüzes Kard (+8 tűzsebzés) | 2 - Mágikus Pajzs (-5 bekapott sebzés)");
+        int idx = askIndex(scanner, "Melyik szereplő kapjon új tulajdonságot? Sorszám: ", roster.size());
+        Fighter target = roster.get(idx);
+
+        if (!(target instanceof Character character)) {
+            throw new IllegalArgumentException("Ez a szereplő nem tud új tulajdonságot szerezni.");
+        }
+
+        int weaponCount = character.getInventory().countByCategory(ItemCategory.WEAPON);
+        int defenseCount = character.getInventory().countByCategory(ItemCategory.DEFENSE);
+        EquipmentDecorator currentEquipment = character.getEquipment();
+        int activeFlameSwords = currentEquipment != null
+                ? currentEquipment.countInstancesOf(FlameSwordDecorator.class) : 0;
+        int activeMagicShields = currentEquipment != null
+                ? currentEquipment.countInstancesOf(MagicShieldDecorator.class) : 0;
+
+        System.out.printf("Elérhető keret %s hátizsákja alapján -> Tüzes fegyver: %d/%d | Mágikus védelem: %d/%d%n",
+                character.getName(), activeFlameSwords, weaponCount, activeMagicShields, defenseCount);
+        System.out.println("1 - Tüzes fegyver (+8 tűzsebzés) | 2 - Mágikus védelem (-5 bekapott sebzés)");
         System.out.print("Válassz tárgyat: ");
         String itemChoice = scanner.nextLine().trim();
 
-        Fighter target = roster.get(idx);
-        Fighter decorated = switch (itemChoice) {
-            case "1" -> new FlameSwordDecorator(target, 8);
-            case "2" -> new MagicShieldDecorator(target, 5);
-            default -> throw new IllegalArgumentException("Ismeretlen felszerelés!");
+        EquipmentDecorator upgradedEquipment = switch (itemChoice) {
+            case "1" -> {
+                if (activeFlameSwords >= weaponCount) {
+                    throw new IllegalStateException(character.getName()
+                            + " nem kaphat több Tüzes fegyver buffot, mert csak " + weaponCount + " db fegyvere van a hátizsákban!");
+                }
+                yield new FlameSwordDecorator(currentEquipment, 8);
+            }
+            case "2" -> {
+                if (activeMagicShields >= defenseCount) {
+                    throw new IllegalStateException(character.getName()
+                            + " nem kaphat több Mágikus védelem buffot, mert csak " + defenseCount + " db védelmi tárgya van a hátizsákban!");
+                }
+                yield new MagicShieldDecorator(currentEquipment, 5);
+            }
+            default -> throw new IllegalArgumentException("Ismeretlen tulajdonság!");
         };
-        roster.set(idx, decorated);
-        System.out.println("Felszerelve: " + decorated.getName());
+        character.equip(upgradedEquipment);
+        System.out.println(character.getName() + " új tulajdonsága: " + character.getEquipment().getDescription());
     }
 }

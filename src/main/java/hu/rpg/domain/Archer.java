@@ -17,8 +17,9 @@ public class Archer extends Character {
     public int attack(Fighter target) throws InvalidActionException {
         validateCanAct(target);
         boolean isCrit = Math.random() < critChance;
-        int damage = isCrit ? getBaseAttack() * 2 : getBaseAttack();
-        target.takeDamage(damage);
-        return damage;
+        int rawDamage = isCrit ? getBaseAttack() * 2 : getBaseAttack();
+        int totalDamage = calculateTotalAttackDamage(rawDamage);
+        target.takeDamage(totalDamage);
+        return totalDamage;
     }
 }

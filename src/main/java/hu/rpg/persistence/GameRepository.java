@@ -18,7 +18,8 @@ public class GameRepository {
 
     public GameRepository() {
         this.gson = new GsonBuilder()
-                .registerTypeAdapter(Fighter.class, new FighterTypeAdapter())
+                .registerTypeAdapter(Fighter.class, new PolymorphicAdapter<>("fighterType"))
+                .registerTypeAdapter(EquipmentDecorator.class, new PolymorphicAdapter<>("decoratorType"))
                 .setPrettyPrinting()
                 .create();
     }
@@ -38,23 +39,27 @@ public class GameRepository {
         }
     }
 
-    private static class FighterTypeAdapter implements JsonSerializer<Fighter>, JsonDeserializer<Fighter> {
-        private static final String TYPE_FIELD = "fighterType";
+    private static class PolymorphicAdapter<T> implements JsonSerializer<T>, JsonDeserializer<T> {
+        private final String typeField;
         private static final String DATA_FIELD = "data";
 
+        private PolymorphicAdapter(String typeField) {
+            this.typeField = typeField;
+        }
+
         @Override
-        public JsonElement serialize(Fighter src, Type typeOfSrc, JsonSerializationContext context) {
+        public JsonElement serialize(T src, Type typeOfSrc, JsonSerializationContext context) {
             JsonObject wrapper = new JsonObject();
-            wrapper.addProperty(TYPE_FIELD, src.getClass().getSimpleName());
+            wrapper.addProperty(typeField, src.getClass().getSimpleName());
             wrapper.add(DATA_FIELD, context.serialize(src, src.getClass()));
             return wrapper;
         }
 
         @Override
-        public Fighter deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        public T deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
             JsonObject wrapper = json.getAsJsonObject();
-            String type = wrapper.get(TYPE_FIELD).getAsString();
+            String type = wrapper.get(typeField).getAsString();
             JsonElement data = wrapper.get(DATA_FIELD);
 
             return switch (type) {
@@ -65,7 +70,7 @@ public class GameRepository {
                 case "Paladin" -> context.deserialize(data, Paladin.class);
                 case "FlameSwordDecorator" -> context.deserialize(data, FlameSwordDecorator.class);
                 case "MagicShieldDecorator" -> context.deserialize(data, MagicShieldDecorator.class);
-                default -> throw new JsonParseException("Ismeretlen harcos típus a mentésben: " + type);
+                default -> throw new JsonParseException("Ismeretlen típus a mentésben: " + type);
             };
         }
     }

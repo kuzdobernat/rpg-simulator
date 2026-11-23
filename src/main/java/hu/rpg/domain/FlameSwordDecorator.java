@@ -1,12 +1,14 @@
 package hu.rpg.domain;
 
-import hu.rpg.service.InvalidActionException;
-
 public class FlameSwordDecorator extends EquipmentDecorator {
     private final int bonusFireDamage;
 
-    public FlameSwordDecorator(Fighter wrappedFighter, int bonusFireDamage) {
-        super(wrappedFighter);
+    public FlameSwordDecorator(int bonusFireDamage) {
+        this(null, bonusFireDamage);
+    }
+
+    public FlameSwordDecorator(EquipmentDecorator wrappedEquipment, int bonusFireDamage) {
+        super(wrappedEquipment);
         if (bonusFireDamage < 0) {
             throw new IllegalArgumentException("A bónusz tűzsebzés nem lehet negatív.");
         }
@@ -14,16 +16,14 @@ public class FlameSwordDecorator extends EquipmentDecorator {
     }
 
     @Override
-    public String getName() {
-        return wrappedFighter.getName() + " [Tüzes Kard]";
+    public String getDescription() {
+        String own = "Tüzes fegyver (+" + bonusFireDamage + " sebzés)";
+        String prev = super.getDescription();
+        return prev.isEmpty() ? own : prev + " + " + own;
     }
 
     @Override
-    public int attack(Fighter target) throws InvalidActionException {
-        int baseDamage = super.attack(target);
-        if (target.isAlive()) {
-            target.takeDamage(bonusFireDamage);
-        }
-        return baseDamage + bonusFireDamage;
+    public int modifyOutgoingDamage(int baseDamage) {
+        return super.modifyOutgoingDamage(baseDamage) + bonusFireDamage;
     }
 }

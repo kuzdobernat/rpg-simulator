@@ -15,6 +15,33 @@ classDiagram
         +heal(int amount) void
     }
 
+    class EquipmentDecorator {
+        <<abstract>>
+        #wrappedEquipment: EquipmentDecorator
+        #EquipmentDecorator()
+        #EquipmentDecorator(EquipmentDecorator wrappedEquipment)
+        +getWrappedEquipment() EquipmentDecorator
+        +getDescription() String
+        +modifyOutgoingDamage(int baseDamage) int
+        +modifyIncomingDamage(int incomingDamage) int
+    }
+
+    class FlameSwordDecorator {
+        -bonusFireDamage: int
+        +FlameSwordDecorator(int bonusFireDamage)
+        +FlameSwordDecorator(EquipmentDecorator wrappedEquipment, int bonusFireDamage)
+        +getDescription() String
+        +modifyOutgoingDamage(int baseDamage) int
+    }
+
+    class MagicShieldDecorator {
+        -damageReduction: int
+        +MagicShieldDecorator(int damageReduction)
+        +MagicShieldDecorator(EquipmentDecorator wrappedEquipment, int damageReduction)
+        +getDescription() String
+        +modifyIncomingDamage(int incomingDamage) int
+    }
+
     class Character {
         <<abstract>>
         -name: String
@@ -23,6 +50,7 @@ classDiagram
         -mana: int
         -baseAttack: int
         -inventory: Inventory~Item~
+        -equipment: EquipmentDecorator
         #Character(String name, int maxHp, int mana, int baseAttack)
         +getName() String
         +getHp() int
@@ -30,6 +58,9 @@ classDiagram
         +getMana() int
         +getBaseAttack() int
         +getInventory() Inventory~Item~
+        +getEquipment() EquipmentDecorator
+        +equip(EquipmentDecorator equipment) void
+        #calculateTotalAttackDamage(int rawDamage) int
         +isAlive() boolean
         +takeDamage(int damage) void
         +heal(int amount) void
@@ -69,34 +100,6 @@ classDiagram
         -holyPower: int
         +Paladin(String name, int maxHp, int mana, int baseAttack, int holyPower)
         +attack(Fighter target) int
-    }
-
-    class EquipmentDecorator {
-        <<abstract>>
-        #wrappedFighter: Fighter
-        #EquipmentDecorator(Fighter wrappedFighter)
-        +getWrappedFighter() Fighter
-        +getName() String
-        +getHp() int
-        +getMaxHp() int
-        +isAlive() boolean
-        +attack(Fighter target) int
-        +takeDamage(int damage) void
-        +heal(int amount) void
-    }
-
-    class FlameSwordDecorator {
-        -bonusFireDamage: int
-        +FlameSwordDecorator(Fighter wrappedFighter, int bonusFireDamage)
-        +getName() String
-        +attack(Fighter target) int
-    }
-
-    class MagicShieldDecorator {
-        -damageReduction: int
-        +MagicShieldDecorator(Fighter wrappedFighter, int damageReduction)
-        +getName() String
-        +takeDamage(int damage) void
     }
 
     class Item {
@@ -156,11 +159,11 @@ classDiagram
     Character <|-- Rogue
     Character <|-- Paladin
 
-    Fighter <|.. EquipmentDecorator
-    EquipmentDecorator o-- "1" Fighter : wrappedFighter
+    EquipmentDecorator o-- "0..1" EquipmentDecorator : wrappedEquipment
     EquipmentDecorator <|-- FlameSwordDecorator
     EquipmentDecorator <|-- MagicShieldDecorator
 
+    Character o-- "0..1" EquipmentDecorator : equipment
     Character *-- "1" Inventory : inventory
     Inventory o-- "*" Item : items
 
@@ -171,7 +174,8 @@ classDiagram
     CombatEngine ..> Fighter : fights
     CombatEngine ..> InvalidActionException : throws
     Fighter ..> InvalidActionException : throws
-    InventoryMenuHandler ..> Character : unwraps
+    InventoryMenuHandler ..> Character : accesses
     InventoryMenuHandler ..> Inventory : manages
     GameRepository ..> Fighter : serializes roster
+    GameRepository ..> EquipmentDecorator : serializes decorators
 ```

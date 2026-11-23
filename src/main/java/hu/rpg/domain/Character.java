@@ -9,6 +9,7 @@ public abstract class Character implements Fighter {
     private int mana;
     private final int baseAttack;
     private final Inventory<Item> inventory;
+    private EquipmentDecorator equipment;
 
     protected Character(String name, int maxHp, int mana, int baseAttack) {
         if (name == null || name.isBlank()) {
@@ -23,6 +24,7 @@ public abstract class Character implements Fighter {
         this.mana = mana;
         this.baseAttack = baseAttack;
         this.inventory = new Inventory<>(50.0);
+        this.equipment = null;
     }
 
     @Override
@@ -52,6 +54,18 @@ public abstract class Character implements Fighter {
         return inventory;
     }
 
+    public EquipmentDecorator getEquipment() {
+        return equipment;
+    }
+
+    public void equip(EquipmentDecorator equipment) {
+        this.equipment = equipment;
+    }
+
+    protected int calculateTotalAttackDamage(int rawDamage) {
+        return equipment != null ? equipment.modifyOutgoingDamage(rawDamage) : rawDamage;
+    }
+
     @Override
     public boolean isAlive() {
         return hp > 0;
@@ -62,7 +76,8 @@ public abstract class Character implements Fighter {
         if (damage < 0) {
             return;
         }
-        this.hp = Math.max(0, this.hp - damage);
+        int effectiveDamage = equipment != null ? equipment.modifyIncomingDamage(damage) : damage;
+        this.hp = Math.max(0, this.hp - effectiveDamage);
     }
 
     @Override
@@ -94,7 +109,10 @@ public abstract class Character implements Fighter {
 
     @Override
     public String toString() {
-        return String.format("%s [%s] - HP: %d/%d, Mana: %d, Alapsebzés: %d",
-                name, getClass().getSimpleName(), hp, maxHp, mana, baseAttack);
+        String eqDesc = (equipment != null && !equipment.getDescription().isEmpty())
+                ? equipment.getDescription()
+                : "Nincs";
+        return String.format("%s [%s] - HP: %d/%d, Mana: %d, Alapsebzés: %d | Felszerelés: %s",
+                name, getClass().getSimpleName(), hp, maxHp, mana, baseAttack, eqDesc);
     }
 }

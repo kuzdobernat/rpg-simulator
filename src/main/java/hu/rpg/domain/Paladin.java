@@ -16,14 +16,13 @@ public class Paladin extends Character {
     @Override
     public int attack(Fighter target) throws InvalidActionException {
         validateCanAct(target);
-        int damage = getBaseAttack() + 3;
-        target.takeDamage(damage);
+        int totalDamage = calculateTotalAttackDamage(getBaseAttack() + 3);
+        target.takeDamage(totalDamage);
 
-        // Ha van elég manája, támadás közben gyógyítja magát
         if (getMana() >= 10) {
             consumeMana(10);
             heal(holyPower);
         }
-        return damage;
+        return totalDamage;
     }
 }

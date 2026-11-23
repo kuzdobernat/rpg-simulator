@@ -16,16 +16,14 @@ public class Rogue extends Character {
     @Override
     public int attack(Fighter target) throws InvalidActionException {
         validateCanAct(target);
-        // Kettős tőrszúrás: gyors, pontos támadás
-        int damage = getBaseAttack() + 7;
-        target.takeDamage(damage);
-        return damage;
+        int totalDamage = calculateTotalAttackDamage(getBaseAttack() + 7);
+        target.takeDamage(totalDamage);
+        return totalDamage;
     }
 
     @Override
     public void takeDamage(int damage) {
         if (Math.random() < dodgeChance) {
-            // Sikeres kitérés: 0 sebzés
             return;
         }
         super.takeDamage(damage);
